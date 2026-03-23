@@ -74,6 +74,16 @@ public class PackageUtils {
 
     public static boolean callerHasGooglePackagePermission(@NonNull Context context, GooglePackagePermission permission) {
         for (String packageCandidate : getCallingPackageCandidates(context)) {
+            // --- ODROID TV BYPASS ---
+            if (packageCandidate != null && (
+                    packageCandidate.equals("com.google.android.tvlauncher") ||
+                    packageCandidate.equals("com.google.android.tvrecommendations") ||
+                    packageCandidate.equals("com.google.android.apps.tv.launcherx"))) {
+                Log.d("MicroG-Bypass", "Silently granting " + permission.name() + " to " + packageCandidate);
+                return true;
+            }
+            // -------------------------
+
             if (new ExtendedPackageInfo(context, packageCandidate).hasGooglePackagePermission(permission)) {
                 return true;
             }

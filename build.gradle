@@ -68,7 +68,11 @@ buildscript {
 }
 
 def execResult(... args) {
-    providers.exec { commandLine args }.standardOutput.asText.get()
+    def result = providers.exec {
+        commandLine args
+        ignoreExitValue = true
+    }
+    return result.result.get().exitValue == 0 ? result.standardOutput.asText.get() : ""
 }
 
 def ignoreGit = providers.environmentVariable('GRADLE_MICROG_VERSION_WITHOUT_GIT').getOrElse('0') == '1'
@@ -76,9 +80,10 @@ def gmsVersion = "25.09.32"
 def gmsVersionCode = Integer.parseInt(gmsVersion.replaceAll('\\.', ''))
 def vendingVersion = "40.2.26"
 def vendingVersionCode = Integer.parseInt(vendingVersion.replaceAll('\\.', ''))
-def gitVersionBase = !ignoreGit ? execResult('git', 'describe', '--tags', '--abbrev=0', '--match=v[0-9]*').trim().substring(1) : "v0.0.0.$gmsVersionCode"
-def gitCommitCount = !ignoreGit ? Integer.parseInt(execResult('git', 'rev-list', '--count', "v$gitVersionBase..HEAD").trim()) : 0
-def gitCommitId = !ignoreGit ? execResult('git', 'show-ref', '--abbrev=7', '--head', 'HEAD').trim().split(' ')[0] : '0000000'
+def gitDescribe = !ignoreGit ? execResult('git', 'describe', '--tags', '--abbrev=0', '--match=v[0-9]*').trim() : ""
+def gitVersionBase = gitDescribe.startsWith("v") ? gitDescribe.substring(1) : "v0.0.0.$gmsVersionCode"
+def gitCommitCount = !ignoreGit && gitDescribe.startsWith("v") ? Integer.parseInt(execResult('git', 'rev-list', '--count', "${gitDescribe}..HEAD").trim() ?: "0") : 0
+def gitCommitId = !ignoreGit ? (execResult('git', 'show-ref', '--abbrev=7', '--head', 'HEAD').trim().split(' ')[0] ?: '0000000') : '0000000'
 def gitDirty = false
 if (!ignoreGit) {
   execResult('git', 'status', '--porcelain').lines().each { stat ->
@@ -123,4 +128,3 @@ subprojects {
         if (hasModule("hms", false)) maven {url 'https://developer.huawei.com/repo/'}
     }
 }
-
