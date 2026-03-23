@@ -11,7 +11,9 @@ This release modifies PackageUtils.java (callerHasGooglePackagePermission) to by
 The following apps will now successfully bypass the Extended Access check:
 
 > com.google.android.tvlauncher
+
 > com.google.android.tvrecommendations
+
 > com.google.android.apps.tv.launcherx
 
 ### Resolves
